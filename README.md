@@ -51,7 +51,7 @@ also work: `ngrok http 3000`.
 1. Host clicks **Create Game** and shares the join link / room code.
 2. Players join; the host screen shows a live player list. **Start** unlocks
    with ≥ 2 players.
-3. 12 questions, 15 s each. Type an answer, press Enter. The screen shows live
+3. 12 questions, 20-30 s each depending on type (trivia 20 s, math/emoji 25 s, unscramble/typing 30 s). Type an answer, press Enter. The screen shows live
    progress (`7 / 12 answered`) and who has answered — never the answer.
    The round ends at 0 s or when everyone answers correctly.
 4. Reveal (5 s): correct answer + per-question points, fastest first.

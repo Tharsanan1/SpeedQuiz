@@ -141,9 +141,9 @@
     clearInterval(timerInt);
     var fill = document.getElementById('timer-fill');
     var cd = document.getElementById('q-countdown');
-    var total = q.endsAt - q.serverTime;
+    var total = q.timeMs || (q.endsAt - q.serverTime);
     function tick() {
-      var remain = Math.max(0, deadline - Date.now());
+      var remain = Math.max(0, deadline - (Date.now() - offset));
       var frac = total > 0 ? remain / total : 0;
       fill.style.width = (frac * 100).toFixed(1) + '%';
       fill.classList.toggle('low', remain < 5000);

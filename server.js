@@ -12,12 +12,37 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { Server } = require('socket.io');
 
-// ---- Tunables (env overrides are for automated testing only) ----
-const PORT = parseInt(process.env.PORT || '3000', 10);
+// ---- Tunables ----
+function parseMs(envVal, fallback) {
+  if (envVal == null || envVal === '') return fallback;
+  const v = parseInt(envVal, 10);
+  return Number.isFinite(v) && v > 0 ? v : fallback;
+}
+const PORT = parseMs(process.env.PORT, 3000);
 const QUESTIONS_PER_GAME = 12;
-const QUESTION_TIME_MS = parseInt(process.env.QUESTION_TIME_MS || '15000', 10);
-const REVEAL_TIME_MS = parseInt(process.env.REVEAL_TIME_MS || '5000', 10);
-const LEADERBOARD_TIME_MS = parseInt(process.env.LEADERBOARD_TIME_MS || '5000', 10);
+// Global override (used by automated tests). When unset, per-type defaults below apply.
+const QUESTION_TIME_MS_OVERRIDE = process.env.QUESTION_TIME_MS != null && process.env.QUESTION_TIME_MS !== ''
+  ? parseMs(process.env.QUESTION_TIME_MS, null)
+  : null;
+const REVEAL_TIME_MS = parseMs(process.env.REVEAL_TIME_MS, 5000);
+const LEADERBOARD_TIME_MS = parseMs(process.env.LEADERBOARD_TIME_MS, 5000);
+// Per-type answering time: longer for typing/unscramble which need more reading/typing.
+// Fixes https://github.com/Tharsanan1/SpeedQuiz/issues/9 (15s was not enough for players).
+const QUESTION_TIME_BY_TYPE = {
+  trivia: 20000,
+  math: 25000,
+  unscramble: 30000,
+  emoji: 25000,
+  typing: 30000,
+};
+const DEFAULT_QUESTION_TIME_MS = 25000;
+
+function getQuestionTimeMs(type) {
+  if (QUESTION_TIME_MS_OVERRIDE != null) return QUESTION_TIME_MS_OVERRIDE;
+  return QUESTION_TIME_BY_TYPE[type] || DEFAULT_QUESTION_TIME_MS;
+}
+// Back-compat: old constant now means the default/fallback duration.
+const QUESTION_TIME_MS = QUESTION_TIME_MS_OVERRIDE ?? DEFAULT_QUESTION_TIME_MS;
 const LOCKOUT_MS = 2000;
 const ROOM_EMPTY_TTL_MS = 5 * 60 * 1000;
 const MAX_NAME_LEN = 20;
@@ -399,7 +424,9 @@ function nextQuestion(room) {
   room.phase = 'question';
   room.questionResults = new Map();
   room.questionStartTime = Date.now();
-  room.questionEndsAt = room.questionStartTime + QUESTION_TIME_MS;
+  const questionTimeMs = getQuestionTimeMs(q.type);
+  room.questionTimeMs = questionTimeMs;
+  room.questionEndsAt = room.questionStartTime + questionTimeMs;
   for (const p of room.players.values()) p.lockoutUntil = 0;
 
   io.to(room.code).emit('question', {
@@ -409,12 +436,13 @@ function nextQuestion(room) {
     prompt: q.prompt,
     endsAt: room.questionEndsAt,
     serverTime: Date.now(),
+    timeMs: questionTimeMs,
     lastQuestion: room.qIndex === room.questions.length - 1,
   });
   sendProgress(room);
 
   clearRoomTimer(room);
-  room.timer = setTimeout(() => endQuestion(room, false), QUESTION_TIME_MS);
+  room.timer = setTimeout(() => endQuestion(room, false), questionTimeMs);
 }
 
 function sendProgress(room) {
@@ -794,6 +822,7 @@ function sendCatchUp(room, player, socket) {
       prompt: q.prompt,
       endsAt: room.questionEndsAt,
       serverTime: Date.now(),
+      timeMs: room.questionTimeMs || getQuestionTimeMs(q.type),
       lastQuestion: room.qIndex === room.questions.length - 1,
     });
     const total = activePlayers(room).length;
@@ -806,4 +835,4 @@ server.listen(PORT, () => {
   console.log(`SpeedQuiz listening on port ${PORT}`);
 });
 
-module.exports = { app, server, isCorrect, normalize, selectQuestions };
+module.exports = { app, server, isCorrect, normalize, selectQuestions, getQuestionTimeMs };

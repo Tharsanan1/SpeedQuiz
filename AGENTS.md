@@ -36,9 +36,9 @@ README.md
    player list, kick buttons. Start unlocks at ≥ 2 **connected**
    non-spectator players.
 2. **Question ×12** — `question {index, total, type, prompt, endsAt,
-   serverTime, lastQuestion}`. 15 s countdown (`QUESTION_TIME_MS`).
-   Clients compute remaining time from `endsAt - Date.now()` (no clock-sync
-   assumption beyond the one-shot `serverTime` offset). Ends at 0 s or when
+   serverTime, timeMs, lastQuestion}`. 20-30 s countdown per type (`getQuestionTimeMs()`).
+   Clients compute remaining time from `endsAt - (Date.now() - offset)` where
+   `offset = Date.now() - serverTime` at receipt (clock-skew safe). Ends at 0 s or when
    every active player has answered correctly.
 3. **Reveal** (5 s, `REVEAL_TIME_MS`) — correct answer + per-player points,
    fastest first.
@@ -117,7 +117,7 @@ README.md
 - Frontend uses only relative URLs (`io()`, `app.css`, `host.js`) so the app
   works behind tunnels/proxies. Never hardcode `localhost` in `public/`.
 - Test-only env overrides exist: `QUESTION_TIME_MS`, `REVEAL_TIME_MS`,
-  `LEADERBOARD_TIME_MS`. Defaults are 15000/5000/5000.
+  `LEADERBOARD_TIME_MS`. Defaults are per-type 20000-30000/5000/5000.
 
 ## Testing
 
