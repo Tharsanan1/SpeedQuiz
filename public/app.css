@@ -182,3 +182,44 @@ select:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
 :root[data-theme="light"] .podium .first { background: #fff8e1; }
 :root[data-theme="light"] .badge.double { background: #fff1e5; }
 :root[data-theme="light"] .badge.host { background: #fff8e1; }
+kbd {
+  background: var(--badge-bg);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 1px 7px;
+  font-size: 0.9em;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn .shortcuts-btn, .shortcuts-btn {
+  font-size: 0.95rem;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+.shortcuts-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+.shortcuts-overlay[hidden] { display: none; }
+.shortcuts-dialog {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  max-width: 480px;
+  width: 100%;
+}
+.shortcuts-dialog h3 { margin-top: 0; }
+.shortcuts-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 1rem; }
+.shortcuts-table th, .shortcuts-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}

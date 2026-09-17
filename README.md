@@ -66,6 +66,23 @@ Late joiners during a game become spectators and join as players on
 promoted to host. Refreshing keeps your name/score/streak via a token stored
 in `localStorage`.
 
+## Keyboard shortcuts
+
+Works on both host and player screens (host keys require host role).
+Press `?` in-game to open the shortcut help.
+
+- `S` — Start game (lobby, host, when enabled). `Alt+S` also works while typing.
+- `N` or `→` — Skip question (host). `Alt+N` while typing.
+- `E` — End game / back to lobby (host, with confirm). `Alt+E` while typing.
+- `R` — Play again (final, host). `Alt+R` while typing.
+- `/` — Focus the answer box (question phase, non-spectators).
+- `Enter` — Submit answer (also `Ctrl+Enter`).
+- `Esc` — Clear the answer box, or close the shortcut help.
+- `?` — Toggle shortcut help.
+
+Single-letter host shortcuts are disabled while the answer box is focused
+(the host also answers), so typing `s/n/e/r` never triggers host actions.
+
 ## Scoring (computed on the server only)
 
 - Timing uses server time: `elapsed = Date.now() - questionStartTime` when

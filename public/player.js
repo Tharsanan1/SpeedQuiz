@@ -115,7 +115,7 @@
     });
     var can = count >= 2;
     startBtn.disabled = !can;
-    startBtn.textContent = can ? 'Start game' : 'Start (need ≥ 2 players)';
+    startBtn.textContent = can ? 'Start game [S]' : 'Start (need ≥ 2 players)';
     var note = document.getElementById('lockout-note');
     if (note) {
       var qSec = (state.questionTimeMs || 15000) / 1000;
@@ -415,6 +415,119 @@
       pod.appendChild(div);
     });
     renderStandings(document.getElementById('f-list'), d.standings);
+  });
+
+  // ---------- keyboard shortcuts ----------
+  // Player: / focus, Enter submit (native), Esc clear/close, ? help.
+  // Promoted host additionally: S start, N/ArrowRight skip, E end, R replay.
+  // Single-letter host keys never fire while typing; Alt+letter works instead.
+  var answerFormEl = document.getElementById('answer-form');
+  var shortcutsOverlay = document.getElementById('shortcuts-overlay');
+  var shortcutsBtn = document.getElementById('shortcuts-btn');
+  var shortcutsClose = document.getElementById('shortcuts-close');
+
+  function isTypingEl(el) {
+    if (!el || !el.tagName) return false;
+    var tag = el.tagName.toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    return !!(el.isContentEditable);
+  }
+  function isTypingNow() { return isTypingEl(document.activeElement); }
+  function isHelpOpen() { return !!(shortcutsOverlay && !shortcutsOverlay.hidden); }
+  function setHelp(open) {
+    if (!shortcutsOverlay) return;
+    shortcutsOverlay.hidden = !open;
+    if (open && shortcutsClose) shortcutsClose.focus();
+  }
+  function clickable(el) {
+    if (!el || el.disabled || el.hidden) return false;
+    if (el.closest && el.closest('[hidden]')) return false;
+    var sec = el.closest ? el.closest('section') : null;
+    if (sec && sec.hidden) return false;
+    return true;
+  }
+  function clickIfVisible(el) {
+    if (clickable(el)) { el.click(); return true; }
+    return false;
+  }
+  function focusAnswerBox() {
+    if (amSpectator) return false;
+    if (!answerInput || answerInput.disabled) return false;
+    var qsec = document.getElementById('view-question');
+    if (!qsec || qsec.hidden) return false;
+    if (answerFormEl && (answerFormEl.hidden || answerFormEl.style.display === 'none')) return false;
+    answerInput.focus();
+    return true;
+  }
+  function clickStart() {
+    if (!isHost) return false;
+    return clickIfVisible(document.getElementById('start-btn'));
+  }
+  function clickSkip() {
+    if (!isHost) return false;
+    return clickIfVisible(document.getElementById('skip-btn'));
+  }
+  function clickEnd() {
+    if (!isHost) return false;
+    return clickIfVisible(document.getElementById('end-btn'));
+  }
+  function clickAgain() {
+    if (!isHost) return false;
+    return clickIfVisible(document.getElementById('again-btn'));
+  }
+
+  if (shortcutsBtn) shortcutsBtn.addEventListener('click', function () { setHelp(true); });
+  if (shortcutsClose) shortcutsClose.addEventListener('click', function () { setHelp(false); });
+  if (shortcutsOverlay) shortcutsOverlay.addEventListener('click', function (e) {
+    if (e.target === shortcutsOverlay) setHelp(false);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var key = e.key || '';
+    var lower = key.toLowerCase();
+    var typing = isTypingNow();
+
+    if (e.ctrlKey || e.metaKey) {
+      if (typing && key === 'Enter' && e.ctrlKey && !e.altKey && answerFormEl) {
+        if (answerFormEl.requestSubmit) { e.preventDefault(); answerFormEl.requestSubmit(); }
+      }
+      return;
+    }
+
+    if (key === 'Escape' || key === 'Esc') {
+      if (isHelpOpen()) { e.preventDefault(); setHelp(false); return; }
+      if (typing && document.activeElement === answerInput) { answerInput.value = ''; e.preventDefault(); }
+      return;
+    }
+
+    if (key === '?') {
+      if (!typing) { e.preventDefault(); setHelp(!isHelpOpen()); }
+      return;
+    }
+
+    if (typing) {
+      if (!e.altKey) return;
+      if (lower === 's') { e.preventDefault(); clickStart(); }
+      else if (lower === 'n') { e.preventDefault(); clickSkip(); }
+      else if (lower === 'e') { e.preventDefault(); clickEnd(); }
+      else if (lower === 'r') { e.preventDefault(); clickAgain(); }
+      return;
+    }
+
+    if (key === '/') {
+      if (focusAnswerBox()) e.preventDefault();
+      return;
+    }
+    if (key === 'ArrowRight') {
+      if (clickSkip()) e.preventDefault();
+      return;
+    }
+    if (e.shiftKey && !e.altKey) return;
+
+    if (lower === 's') { if (clickStart()) e.preventDefault(); }
+    else if (lower === 'n') { if (clickSkip()) e.preventDefault(); }
+    else if (lower === 'e') { if (clickEnd()) e.preventDefault(); }
+    else if (lower === 'r') { if (clickAgain()) e.preventDefault(); }
   });
 
   show('lobby');

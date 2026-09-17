@@ -13,6 +13,7 @@
     <span class="logo small">⚡ Speed Quiz</span>
     <span id="me" class="me"></span>
     <button type="button" class="btn theme-toggle" data-theme-toggle aria-label="Toggle dark mode">🌙 Dark</button>
+    <button type="button" class="btn shortcuts-btn" id="shortcuts-btn" aria-label="Show keyboard shortcuts">? Shortcuts</button>
     <span id="conn" class="conn">connecting…</span>
   </header>
 
@@ -29,7 +30,7 @@
     <ul id="player-list" class="plist"></ul>
     <p id="spectate-note" class="muted" hidden>You joined mid-game — you are spectating until the next game.</p>
     <div class="host-controls" id="player-host-controls" hidden>
-      <button id="start-btn" class="btn primary big" disabled>Start (need ≥ 2 players)</button>
+      <button id="start-btn" class="btn primary big" disabled aria-keyshortcuts="s alt+s">Start (need ≥ 2 players)</button>
     </div>
   </section>
 
@@ -52,8 +53,8 @@
     <div id="q-progress" class="progress"></div>
     <ul id="q-answered" class="chips"></ul>
     <div class="host-controls" id="ingame-host-controls" hidden>
-      <button id="skip-btn" class="btn">Skip question</button>
-      <button id="end-btn" class="btn danger">End game</button>
+      <button id="skip-btn" class="btn" aria-keyshortcuts="n ArrowRight alt+n">Skip question <kbd>N</kbd></button>
+      <button id="end-btn" class="btn danger" aria-keyshortcuts="e alt+e">End game <kbd>E</kbd></button>
     </div>
   </section>
 
@@ -80,9 +81,28 @@
     <div id="podium" class="podium"></div>
     <ol id="f-list" class="llist"></ol>
     <div class="host-controls" id="final-host-controls" hidden>
-      <button id="again-btn" class="btn primary big">Play again (same room)</button>
+      <button id="again-btn" class="btn primary big" aria-keyshortcuts="r alt+r">Play again (same room) <kbd>R</kbd></button>
     </div>
   </section>
+
+  <div id="shortcuts-overlay" class="shortcuts-overlay" hidden>
+    <div class="shortcuts-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+      <h3 id="shortcuts-title">Keyboard shortcuts</h3>
+      <table class="shortcuts-table">
+        <tr><th>Key</th><th>Action</th></tr>
+        <tr><td><kbd>S</kbd> / <kbd>Alt+S</kbd></td><td>Start game (lobby, host)</td></tr>
+        <tr><td><kbd>N</kbd> / <kbd>→</kbd></td><td>Skip question (host)</td></tr>
+        <tr><td><kbd>E</kbd></td><td>End game (host, with confirm)</td></tr>
+        <tr><td><kbd>R</kbd></td><td>Play again (final, host)</td></tr>
+        <tr><td><kbd>/</kbd></td><td>Focus answer box</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>Submit answer</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Clear answer / close this help</td></tr>
+        <tr><td><kbd>?</kbd></td><td>Toggle this help</td></tr>
+      </table>
+      <p class="muted">Single-letter shortcuts are disabled while typing an answer — use <kbd>Alt</kbd>+letter instead.</p>
+      <button id="shortcuts-close" class="btn">Close [Esc]</button>
+    </div>
+  </div>
 
   <p id="fatal" class="error" hidden></p>
 </main>
