@@ -84,7 +84,7 @@
     if (state.phase === 'lobby' || state.phase === 'final') renderLobby(state);
     document.getElementById('spectate-note').hidden = !amSpectator;
   });
-  socket.on('back-to-lobby', function () { resetAnswerUI(); });
+  socket.on('back-to-lobby', function () { clearInterval(timerInt); resetAnswerUI(); });
 
   function renderLobby(state) {
     show('lobby');
@@ -120,6 +120,30 @@
 
   // ---------- question ----------
   var timerInt = null;
+
+  // Shared countdown for reveal/leaderboard so players know when the next
+  // phase starts. Reuses timerInt (only one phase is visible at a time).
+  function startPhaseCountdown(fillId, cdId, endsAt, serverTime, nextLabel) {
+    clearInterval(timerInt);
+    var fill = document.getElementById(fillId);
+    var cd = document.getElementById(cdId);
+    if (!fill || !cd || !endsAt || !serverTime) {
+      if (fill) fill.style.width = '0%';
+      if (cd) cd.textContent = '';
+      return;
+    }
+    var total = endsAt - serverTime;
+    function tick() {
+      var remain = Math.max(0, endsAt - Date.now());
+      var frac = total > 0 ? remain / total : 0;
+      fill.style.width = (frac * 100).toFixed(1) + '%';
+      fill.classList.toggle('low', remain < 2000);
+      cd.textContent = 'Next: ' + nextLabel + ' in ' + (remain / 1000).toFixed(remain < 5000 ? 1 : 0) + 's';
+      if (remain <= 0) clearInterval(timerInt);
+    }
+    tick();
+    timerInt = setInterval(tick, 100);
+  }
   var answerInput = document.getElementById('answer-input');
   var answerMsg = document.getElementById('answer-msg');
   var locked = false;
@@ -254,11 +278,13 @@
       li.appendChild(pts);
       ul.appendChild(li);
     });
+    startPhaseCountdown('r-timer-fill', 'r-countdown', r.endsAt, r.serverTime, 'leaderboard');
   });
 
   socket.on('leaderboard', function (d) {
     show('leaderboard');
     renderStandings(document.getElementById('l-list'), d.standings);
+    startPhaseCountdown('l-timer-fill', 'l-countdown', d.endsAt, d.serverTime, d.next === 'final' ? 'final results' : 'next question');
   });
 
   function renderStandings(ol, standings) {
@@ -289,6 +315,7 @@
   }
 
   socket.on('final', function (d) {
+    clearInterval(timerInt);
     show('final');
     var pod = document.getElementById('podium');
     pod.innerHTML = '';
