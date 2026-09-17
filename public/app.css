@@ -130,3 +130,10 @@ input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
 .podium .pname { font-size: 1.3rem; font-weight: 700; }
 .podium .pscore { color: var(--muted); }
 .host-controls { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+/* Typing questions: prevent selecting/copying the prompt text so it must be typed. */
+.prompt.no-copy {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}

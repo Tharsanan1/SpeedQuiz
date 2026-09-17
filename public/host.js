@@ -120,18 +120,89 @@
   var timerInt = null, deadline = 0;
   var answerInput = document.getElementById('answer-input');
   var answerMsg = document.getElementById('answer-msg');
+  var qPromptEl = document.getElementById('q-prompt');
   var locked = false;
+  var isTypingQuestion = false;
+  var defaultPlaceholder = answerInput.placeholder;
+
+  function setTypingProtection(isTyping) {
+    isTypingQuestion = isTyping;
+    if (qPromptEl) qPromptEl.classList.toggle('no-copy', isTyping);
+    if (isTyping) {
+      answerInput.setAttribute('autocapitalize', 'off');
+      answerInput.setAttribute('autocorrect', 'off');
+      answerInput.setAttribute('spellcheck', 'false');
+      answerInput.placeholder = 'Type it out — paste/shortcuts disabled';
+    } else {
+      answerInput.placeholder = defaultPlaceholder;
+    }
+  }
+
+  function blockTypingShortcut(msg) {
+    answerMsg.textContent = msg || 'Paste/shortcuts disabled — please type the answer';
+    answerMsg.className = 'answer-msg bad';
+    answerMsg.hidden = false;
+  }
+
+  // Block paste/drop into the answer box for typing questions.
+  answerInput.addEventListener('paste', function (e) {
+    if (!isTypingQuestion) return;
+    e.preventDefault();
+    blockTypingShortcut();
+  });
+  answerInput.addEventListener('drop', function (e) {
+    if (!isTypingQuestion) return;
+    e.preventDefault();
+    blockTypingShortcut();
+  });
+  answerInput.addEventListener('contextmenu', function (e) {
+    if (!isTypingQuestion) return;
+    e.preventDefault();
+  });
+  answerInput.addEventListener('keydown', function (e) {
+    if (!isTypingQuestion) return;
+    var key = (e.key || '').toLowerCase();
+    if (((e.ctrlKey || e.metaKey) && (key === 'v' || key === 'x')) ||
+        (e.shiftKey && e.key === 'Insert')) {
+      e.preventDefault();
+      blockTypingShortcut();
+    }
+  });
+  // Block copying the prompt text for typing questions.
+  if (qPromptEl) {
+    qPromptEl.addEventListener('copy', function (e) {
+      if (isTypingQuestion) e.preventDefault();
+    });
+    qPromptEl.addEventListener('cut', function (e) {
+      if (isTypingQuestion) e.preventDefault();
+    });
+    qPromptEl.addEventListener('contextmenu', function (e) {
+      if (isTypingQuestion) e.preventDefault();
+    });
+    qPromptEl.addEventListener('dragstart', function (e) {
+      if (isTypingQuestion) e.preventDefault();
+    });
+    qPromptEl.addEventListener('keydown', function (e) {
+      if (!isTypingQuestion) return;
+      var key = (e.key || '').toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && (key === 'c' || key === 'x' || key === 'v' || key === 'insert')) {
+        e.preventDefault();
+      }
+    });
+  }
 
   function resetAnswerUI() {
     answerInput.value = '';
     answerInput.disabled = false;
     answerMsg.hidden = true;
     locked = false;
+    setTypingProtection(false);
   }
 
   socket.on('question', function (q) {
     show('question');
     resetAnswerUI();
+    setTypingProtection(q.type === 'typing');
     document.getElementById('q-num').textContent = 'Q ' + (q.index + 1) + ' / ' + q.total;
     document.getElementById('q-type').textContent = q.type;
     document.getElementById('q-last').hidden = !q.lastQuestion;
